@@ -1,0 +1,270 @@
+---
+title: "R_proj1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Plot subspace distance
+```{r}
+Plot_dist = function(s,d1 = 100, d2 =200,n1,n2 ,V1_0, V1_hat, V2_0,V2_hat){
+  x1 = s* (log(d1)/n1)^(1/2)
+  y1 = rep(0,8)
+  for(i in 1:8){
+    y[i] = y1 = sqrt(abs(V_10 - V1_hat[i,])^2)  # F-norm
+  }
+    
+  plot(x1,y1, xlab = "s × (log d /n)^(1/2)",ylab="Subspace distance")
+}
+```
+
+
+### Setting 1
+```{r}
+library("glmnet")
+library("mvtnorm")
+library('MASS')
+library('ggplot2')
+
+```
+
+### Data preparation
+
+```{r}
+data_gene = function(n = 100, p= 150,s= 3,seed = 0){
+  
+beta <- rep(0, p)
+beta[1:3] <- 1/sqrt(3)
+
+Sigma <- matrix(0.5,p,p)
+tmpmat <- matrix(0,p,p)
+for(i in 1:(p-1)){
+		tmpmat[i,i:p] <- c(0:(length(i:p)-1))
+}
+tmpmat = tmpmat+t(tmpmat)
+Sigma <- Sigma^tmpmat	
+
+X <- mvrnorm(n=n,mu=rep(0,p),Sigma=Sigma)
+return(X)
+}
+
+```
+
+### setting1
+```{r}
+#par(mfrow = c(2,2))
+X = data_gene(n=100,p=150,s =3,seed =0)
+
+y <- (X[,1]+X[,2]+X[,3])/sqrt(3) + 0.2*rnorm(n,0,1)
+
+obj.cv <- cv.glmnet(X, y, nfolds = 10)
+lasso_1 = glmnet(X,y, alpha = 1)
+ridge_1 = glmnet(X,y, alpha = 0)
+elnet_1 = glmnet(X,y, alpha = 0.5)
+
+names_plot = c("lasso_1","ridge_1","elnet_1")
+
+plot(obj.cv)
+title("Setting1: Choose λ",line =-1 )
+
+plot(lasso_1,label = T, lwd =2)
+title("Setting1: Lasso",line =-1 )
+
+plot(ridge_1,label = T, lwd =2)
+title("Setting1: Ridge",line =-1 )
+
+plot(elnet_1,label = T, lwd =2)
+title("Setting1: elnet",line =-1 )
+
+```
+
+
+### setting2
+```{r}
+p= 150
+X = data_gene(n=100,p=150,s =3,seed =0)
+beta <- rep(0,p)
+beta[1:3] <- 1/sqrt(3)
+
+y <- 1+exp(X%*%beta)+0.2*rnorm(n,0,1)
+
+obj.cv <- cv.glmnet(X, y, nfolds = 10)
+lasso_1 = glmnet(X,y, alpha = 1)
+ridge_1 = glmnet(X,y, alpha = 0)
+elnet_1 = glmnet(X,y, alpha = 0.5)
+
+names_plot = c("lasso_1","ridge_1","elnet_1")
+
+plot(obj.cv)
+title("Setting2: Choose λ",line =-1 )
+
+plot(lasso_1,label = T, lwd =2)
+title("Setting2: Lasso",line =-1 )
+
+plot(ridge_1,label = T, lwd =2)
+title("Setting2: Ridge",line =-1 )
+
+plot(elnet_1,label = T, lwd =2)
+title("Setting2: elnet",line =-1 )
+```
+
+
+### setting3
+```{r}
+p= 150
+set.seed(0)
+X = data_gene(n=100,p=150,s =3,seed =0)
+
+
+y = (X[,1]+X[,2]+X[,3])/(0.5+(X[,4]+X[,5]+1.5)^2)+0.05*rnorm(n,0,1)
+
+obj.cv <- cv.glmnet(X, y, nfolds = 10)
+lasso_1 = glmnet(X,y, alpha = 1)
+ridge_1 = glmnet(X,y, alpha = 0)
+elnet_1 = glmnet(X,y, alpha = 0.5)
+
+names_plot = c("lasso_1","ridge_1","elnet_1")
+
+plot(obj.cv)
+title("Setting3: Choose λ",line =-1 )
+
+plot(lasso_1,label = T, lwd =2)
+title("Setting3: Lasso",line =-1 )
+
+plot(ridge_1,label = T, lwd =2)
+title("Setting3: Ridge",line =-1 )
+
+plot(elnet_1,label = T, lwd =2)
+title("Setting3: elnet",line =-1 )
+```
+
+
+
+### Plot subspace distance  --setting1 
+```{r}
+Plot_dist = function(s,d1 = 100, d2 =200,n1,n2 ,V1_0, V1_hat, V2_0,V2_hat){
+  x1 = s* (log(d1)/n1)^(1/2)
+  y1 = c(1:8)
+  for(i in 1:8){
+    y1[i] = sum(sqrt(abs(V1_0 - V1_hat[i,])^2))  # F-norm
+  }
+  
+  print(x1)
+  print(y1)
+  par(pin = c(3.2,2.7))
+  
+  plot(x1,y1, xlab = "s × (log d /n)^(1/2)",ylab="Subspace distance",
+       xlim = c(0,0.20),ylim = c(0.01,0.06),type = 'l',lwd = 2)
+  points(x1,y1,pch= 21)
+  
+  plot(x1,y1, xlab = "s × (log d /n)^(1/2)",ylab="Subspace distance",
+       xlim = c(0,0.20),ylim = c(0.01,0.06),type = 'l',lwd = 2)
+  
+  x2 = s* (log(d2)/n2)^(1/2)
+  y2 = c(1:8)
+  for(i in 1:8){
+    y2[i] = sum(sqrt(abs(V2_0 - V2_hat[i,])^2))  # F-norm
+  }
+  lines(x2,y2, type = 'l',lwd = 2, col ='gray')
+  points(x2,y2,pch= 21, col='gray')
+}
+```
+
+```{r}
+beta_gene_se1 = function(d = 100, seed = 0){
+set.seed(seed)
+d1 = d
+n1 = seq(9000,2000,length.out = 8)
+beta = matrix(data = NA, nrow = 8 ,ncol = d1)
+index = 1
+V1_0 = rep(0,d1)
+V1_0[1:3] = 1/sqrt(3)
+
+for (i in n1){
+  X = data_gene(n=i,p=d1,s =3,seed =0)
+  y <- (X[,1]+X[,2]+X[,3])/sqrt(3) + 0.2*rnorm(n,0,1)
+  
+  beta[index,] = as.vector(glmnet(X,y, alpha = 1,lambda = obj.cv$lambda.min)$beta)
+  index = index+1
+}
+return(beta)
+}
+
+```
+
+```{r}
+d1 = 100; d2= 200
+
+V1_0 = rep(0,d1)
+V1_0[1:3] = 1/sqrt(3)
+
+V2_0 = rep(0,d2)
+V2_0[1:3] = 1/sqrt(3)
+
+beta1 = beta_gene_se1(d = d1, seed = 0)
+beta2 = beta_gene_se1(d = d2, seed = 1)
+```
+
+
+
+```{r}
+Plot_dist(s=3,d1 = 100, d2 = 200, n1= n1,n2= n1,
+          V1_0 = V1_0, V1_hat = beta1,V2_0 = V2_0, V2_hat = beta2 )
+```
+
+
+```{r}
+
+```
+
+
+
+
+
+
+###  Other example
+
+
+```{r}
+set.seed(19875)  # Set seed for reproducibility
+n <- 1000  # Number of observations
+p <- 5000  # Number of predictors included in model
+real_p <- 15  # Number of true predictors
+x <- matrix(rnorm(n*p), nrow=n, ncol=p)
+y <- apply(x[,1:10], 1, sum) + rnorm(n)
+
+# Split data into train (2/3) and test (1/3) sets
+train_rows <- sample(1:n, .66*n)
+x.train <- x[train_rows, ]
+x.test <- x[-train_rows, ]
+
+y.train <- y[train_rows]
+y.test <- y[-train_rows]
+
+fit.lasso <- glmnet(x.train, y.train,  alpha=1)
+```
+
+
+```{r}
+#plot(fit.lasso)
+lasso_cv <- glmnet(x, y, alpha = 1)
+```
+
+
+```{r}
+plot(lasso_cv, label = T,lwd=2)
+```
+
+
+
+
+
+
+
+
+
+
+
+
